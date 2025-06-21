@@ -80,12 +80,14 @@ router.post("/validate-efaktur", upload.single("file"), async (req, res) => {
       const text = data.text.replace(/\n+/g, ' ')
         .replace(/\s{2,}/g, ' ')
         .trim()
+      const originalText = text
       const parsed = parseText(text)
 
       const qr_data = await qrScanner(mimeType, req, res)
 
       const result = {
         text: parsed,
+        originalText,
         metadata: {
           numpages: data.numpages,
           numrender: data.numrender,
@@ -112,6 +114,105 @@ router.post("/qr-validator", upload.single("file"), async (req, res) => {
   }
   return res.status(200).json({ status: 'success', data: qr_code.data });
 })
+
+router.get("/analysis-report", async (req, res) => {
+  const data1 = { //xml
+    type: 'xml',
+    "kdJenisTransaksi": "07",
+    "fgPengganti": "0",
+    "Nomor Faktur": "0700002212345678",
+    "Tanggal Faktur": "01/04/2022",
+    "NPWP Penjual": "012345678012000",
+    "Nama Penjual": "PT ABC",
+    "alamatPenjual": "Jalan Gatot Subroto No. 40A, Senayan, Kebayoran Baru,\r\nJakarta Selatan 12910",
+    "NPWP Pembeli": "023456789217000",
+    "Nama Pembeli": "PT XYZ",
+    "alamatLawanTransaksi": "Jalan Kuda Laut No. 1, Sungai Jodoh, Batu Ampar,\r\nBatam 29444",
+    "Jumlah DPP": 15000000,
+    "Jumlah PPN": 1650000,
+    "jumlahPpnBm": "0",
+    "statusApproval": "Faktur Valid, Sudah Diapprove oleh DJP",
+    "statusFaktur": "Faktur Pajak Normal",
+    "referensi": "123/ABC/IV/2022",
+    "detailTransaksi": {
+      "nama": "KOMPUTER MERK ABC, HS Code 84714110",
+      "hargaSatuan": "5000000",
+      "jumlahBarang": "3",
+      "hargaTotal": "15000000",
+      "diskon": "0",
+      "dpp": "15000000",
+      "ppn": "1650000",
+      "tarifPpnbm": "0",
+      "ppnbm": "0"
+    }
+  }
+
+  const data2 = { //pdf 
+    type: 'pdf',
+    "NPWP Penjual": "012345678012000",
+    "Nama Penjual": "PT ABC",
+    "NPWP Pembeli": "0123456780121111111",
+    "Nama Pembeli": "PT XYZ",
+    "Nomor Faktur": "0700002212345678",
+    "Tanggal Faktur": "01/05/2025",
+    "Jumlah DPP": 15000000,
+    "Jumlah PPN": 1650000
+  }
+
+  // let obj1 = Object.entries(data1)
+  // let obj2 = Object.entries(data2)
+
+  if (data1.length > data2.length) {
+    [data1, data2] = [data2, data1]
+  }
+
+  const deviations = []
+  const validated_data = []
+  const type = data1.type
+
+  for (let [key, value] of Object.entries(data1)) {
+    const obj =
+    {
+      field: null,
+      pdf_value: null,
+      djp_api_value: null,
+      deviation_type: null,
+    }
+
+    const obj2 = {
+      [key]: value,
+    }
+    // console.log(obj2, '<== ni apa?')
+    for (let [key1, value1] of Object.entries(data2)) {
+      if (key == key1) {
+        if (value != value1) {
+          obj.field = key
+          obj.djp_api_value = value
+          obj.pdf_value = value1
+          obj.deviation_type = "mismatch"
+          deviations.push(obj)
+        }
+        if (value == value1) {
+          validated_data.push(obj2)
+        }
+      }
+    }
+    // console.log(key, value, '<== ini apa??')
+    if (type == 'xml') {
+      obj.djp_api_value = value
+      obj.deviation_type = "missing_in_pdf"
+    }
+    if (type == 'pdf') {
+      obj.pdf_value = value
+      obj.deviation_type = "missing_in_djp_api"
+    }
+    obj.field = key
+    deviations.push(obj)
+  }
+  const status = deviations.length > 0 ? 'validated_with_deviation' : deviations.length == 0 ? 'validated_successfully' : 'error'
+  return res.status(200).send({ status, message: 'Success comparing data', validation_results: { deviations, validated_data } })
+})
+
 
 
 router.use((err, req, res, next) => {

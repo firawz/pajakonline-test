@@ -83,12 +83,12 @@ export const parsedDataMapping = (data) => {
         }
 
         if (key === 'jumlahDpp') {
-            result['Jumlah DPP'] = numberValidator(value);
+            result['Jumlah DPP'] = parseInt(numberValidator(value), 10);
             delete result[key]
         }
 
         if (key === 'jumlahPpn') {
-            result['Jumlah PPN'] = numberValidator(value);
+            result['Jumlah PPN'] = parseInt(numberValidator(value), 10);
             delete result[key]
         }
     }

@@ -14,7 +14,7 @@ export const dateValidator = (tanggal) => {
     for (const fmt of possibleFormats) {
         const parsedDate = parse(tanggal, fmt, new Date());
         if (!isNaN(parsedDate)) {
-            return format(parsedDate, 'dd MMMM yyyy');
+            return format(parsedDate, 'dd/MM/yyyy');
         }
     }
     return tanggal;
