@@ -1,0 +1,35 @@
+{
+  "name": "pajakonline-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firawz/pajakonline-test.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/firawz/pajakonline-test/issues"
+  },
+  "homepage": "https://github.com/firawz/pajakonline-test#readme",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "body-parser": "^2.2.0",
+    "body-parser-xml": "^2.0.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jimp": "^1.6.0",
+    "jsqr": "^1.4.0",
+    "multer": "^2.0.1",
+    "pdf-parse": "^1.1.1",
+    "sharp": "^0.34.2"
+  },
+  "type": "module"
+}
